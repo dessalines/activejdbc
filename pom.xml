@@ -3,7 +3,7 @@
   <groupId>com.github.tchoulihan</groupId>
   <artifactId>activejdbc-root</artifactId>
   <packaging>pom</packaging>
-  <version>1.4.15-SNAPSHOT</version>
+  <version>1.4.17-SNAPSHOT</version>
   <name>JavaLite - ActiveJDBC Root</name>
   <url>https://github.com/tchoulihan/activejdbc</url>
   <parent>
@@ -156,15 +156,15 @@
     </pluginRepository>
   </pluginRepositories>
   <distributionManagement>
-    <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus snapshot repository</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
     <repository>
       <id>sonatype-nexus-staging</id>
       <name>Sonatype Nexus release repository</name>
       <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus snapshot repository</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
   </distributionManagement>
 </project>

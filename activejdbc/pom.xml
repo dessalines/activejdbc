@@ -3,7 +3,7 @@
     <groupId>com.github.tchoulihan</groupId>
     <artifactId>activejdbc</artifactId>
     <packaging>jar</packaging>
-    <version>1.4.13-SNAPSHOT</version>
+    <version>1.4.14-SNAPSHOT</version>
     <name>JavaLite - ActiveJDBC ORM Framework</name>
 
 	
@@ -245,7 +245,7 @@
         <dependency>
             <groupId>org.javalite</groupId>
             <artifactId>javalite-common</artifactId>
-            <version>1.4.11-SNAPSHOT</version>
+            <version>1.4.11</version>
             <exclusions>
                 <exclusion>
                     <groupId>dom4j</groupId>
@@ -325,4 +325,8 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+  <scm>
+    <tag>activejdbc-root-1.4.11</tag>
+  </scm>
 </project>

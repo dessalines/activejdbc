@@ -3,7 +3,7 @@
   <groupId>com.github.tchoulihan</groupId>
   <artifactId>activejdbc-root</artifactId>
   <packaging>pom</packaging>
-  <version>1.4.13-SNAPSHOT</version>
+  <version>1.4.15-SNAPSHOT</version>
   <name>JavaLite - ActiveJDBC Root</name>
   <url>https://github.com/tchoulihan/activejdbc</url>
   <parent>

@@ -1,16 +1,15 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.tchoulihan</groupId>
 	<artifactId>activejdbc</artifactId>
 	<packaging>jar</packaging>
-	<version>1.4.17-SNAPSHOT</version>
+	<version>1.4.19-SNAPSHOT</version>
 	<name>JavaLite - ActiveJDBC ORM Framework</name>
 
 	<parent>
 		<groupId>com.github.tchoulihan</groupId>
 		<artifactId>activejdbc-root</artifactId>
-		<version>1.4.17-SNAPSHOT</version>
+		<version>1.4.19-SNAPSHOT</version>
 	</parent>
 
 
@@ -230,9 +229,9 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.javalite</groupId>
+			<groupId>com.github.tchoulihan</groupId>
 			<artifactId>javalite-common</artifactId>
-			<version>1.4.11</version>
+			<version>1.4.19-SNAPSHOT</version>
 			<exclusions>
 				<exclusion>
 					<groupId>dom4j</groupId>
@@ -314,6 +313,6 @@
 	</dependencies>
 
 	<scm>
-		<tag>activejdbc-root-1.4.11</tag>
+		<tag>activejdbc-root-1.4.17</tag>
 	</scm>
 </project>

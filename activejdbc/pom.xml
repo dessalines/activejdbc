@@ -3,9 +3,10 @@
     <groupId>com.github.tchoulihan</groupId>
     <artifactId>activejdbc</artifactId>
     <packaging>jar</packaging>
-    <version>1.4.12-SNAPSHOT</version>
+    <version>1.4.13-SNAPSHOT</version>
     <name>JavaLite - ActiveJDBC ORM Framework</name>
 
+	
 	<parent>
 		<groupId>org.sonatype.oss</groupId>
 		<artifactId>oss-parent</artifactId>
@@ -191,6 +192,23 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
+             <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.2</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <!-- add this to disable checking -->
+              <additionalparam>-Xdoclint:none</additionalparam>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
         </plugins>
     </build>
 

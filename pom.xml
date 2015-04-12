@@ -1,117 +1,169 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>org.javalite</groupId>
-    <artifactId>activejdbc-root</artifactId>
-    <packaging>pom</packaging>
-    <version>1.4.11-SNAPSHOT</version>
-    <name>JavaLite - ActiveJDBC Root</name>
-    <url>https://github.com/javalite/activejdbc/</url>
-
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>7</version>
-    </parent>
-
-    <organization>
-        <name>JavaLite</name>
-        <url>http://javalite.io</url>
-    </organization>
-
-    <licenses>
-        <license>
-            <name>Apache License 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-
-    <scm>
-       <connection>scm:git:git@github.com:javalite/activejdbc.git</connection>
-       <developerConnection>scm:git:git@github.com:javalite/activejdbc.git</developerConnection>
-       <url>git@github.com:javalite/activejdbc.git</url>
-     </scm>
-
-    <profiles>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
-    <build>
-        <plugins>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-javadoc-plugin</artifactId>
-              <version>2.10.1</version>
-              <configuration>
-                 <stylesheetfile>javadoc/stylesheet.css</stylesheetfile>
-                <javadocDirectory>javadoc</javadocDirectory>
-              </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
-    <modules>
-        <module>javalite-common</module>
-        <module>activejdbc-instrumentation</module>
-        <module>activejdbc</module>
-        <module>db-migrator</module>
-        <module>db-migrator-integration-test</module>
-        <module>git-info-maven-plugin</module>
-        <module>app-config</module>
-    </modules>
-
-    <repositories>
-        <repository>
-            <id>sonatype-nexus-plugin-snapshots</id>
-            <name>JavaLite Plugin Snapshots</name>
-            <url>http://repo.javalite.io/</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-			<id>sonatype-nexus-plugin-snapshots</id>
-			<name>JavaLite Plugin Snapshots</name>
-			<url>http://repo.javalite.io/</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</pluginRepository>
-    </pluginRepositories>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>myrepository</id>
-            <url>file://C:/Users/Jenkins/repository</url>
-        </snapshotRepository>
-    </distributionManagement>
-
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.javalite</groupId>
+  <artifactId>activejdbc-root</artifactId>
+  <packaging>pom</packaging>
+  <version>1.4.11</version>
+  <name>JavaLite - ActiveJDBC Root</name>
+  <url>https://github.com/javalite/activejdbc/</url>
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+  <organization>
+    <name>JavaLite</name>
+    <url>http://javalite.io</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>Apache License 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <connection>scm:git:https://github.com/tchoulihan/activejdbc</connection>
+    <developerConnection>scm:git:https://github.com/tchoulihan/activejdbc</developerConnection>
+    <url>scm:git:https://github.com/tchoulihan/activejdbc</url>
+  </scm>
+  <profiles>
+    <profile>
+      <id>default-tools.jar</id>
+      <activation>
+        <property>
+          <name>java.vendor</name>
+          <value>Sun Microsystems Inc.</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>com.sun</groupId>
+          <artifactId>tools</artifactId>
+          <version>1.4.2</version>
+          <scope>system</scope>
+          <systemPath>${java.home}/../lib/tools.jar</systemPath>
+        </dependency>
+      </dependencies>
+    </profile>
+    <!-- This profile will sign the JAR file, sources file, and javadocs file 
+            using the GPG key on the local machine. See: https://docs.sonatype.org/display/Repository/How+To+Generate+PGP+Signatures+With+Maven -->
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>release</name>
+          <value>true</value>
+        </property>
+      </activation>
+    </profile>
+    <profile>
+      <id>sonatype-oss-release</id>
+      <properties>
+        <gpg.keyname>99E3403D</gpg.keyname>
+        <gpg.passphrase />
+        <gpg.defaultKeyring>false</gpg.defaultKeyring>
+        <gpg.useagent>true</gpg.useagent>
+        <gpg.lockMode>never</gpg.lockMode>
+        <gpg.homedir>/home/tyler/.gnupg</gpg.homedir>
+        <gpg.publicKeyring>/home/tyler/.gnupg/pubring.gpg</gpg.publicKeyring>
+        <gpg.secretKeyring>/home/tyler/.gnupg/secring.gpg</gpg.secretKeyring>
+      </properties>
+    </profile>
+  </profiles>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.4.2</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.2</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <!-- add this to disable checking -->
+              <additionalparam>-Xdoclint:none</additionalparam>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <modules>
+    <!-- <module>javalite-common</module> -->
+    <!-- <module>activejdbc-instrumentation</module> -->
+    <module>activejdbc</module>
+    <!-- <module>db-migrator</module> -->
+    <!-- <module>db-migrator-integration-test</module> -->
+    <!-- <module>git-info-maven-plugin</module> -->
+    <!-- <module>app-config</module> -->
+  </modules>
+  <repositories>
+    <repository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Plugin Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>sonatype-nexus-plugin-snapshots</id>
+      <name>Sonatype Nexus Plugin Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+  <distributionManagement>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus snapshot repository</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>sonatype-nexus-staging</id>
+      <name>Sonatype Nexus release repository</name>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
 </project>

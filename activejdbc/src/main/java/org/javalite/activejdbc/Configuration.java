@@ -93,13 +93,15 @@ public class Configuration {
 //        }
 
 //        String cacheManagerClass = properties.getProperty("cache.manager");
-        String cacheManagerClass = "org.javalite.activejdbc.cache.OSCacheManager";
+    	
+//        String cacheManagerClass = "org.javalite.activejdbc.cache.OSCacheManager";
+    	String cacheManagerClass = null;
         if(cacheManagerClass != null){
 
             try{
                 Class cmc = Class.forName(cacheManagerClass);
                 cacheManager = (CacheManager)cmc.newInstance();
-            }catch(Exception e){
+            } catch(Exception e){
                 throw new InitException("failed to initialize a CacheManager. Please, ensure that the property " +
                         "'cache.manager' points to correct class which extends 'activejdbc.cache.CacheManager' class and provides a default constructor.", e);
             }

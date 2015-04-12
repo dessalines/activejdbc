@@ -105,7 +105,7 @@ public class DeleteCascadeTest extends ActiveJDBCTest{
 
         //case 1: simple: follow many to many, then one to many
         deleteAndPopulateTables("doctors", "patients", "doctors_patients", "prescriptions");
-        Registry.cacheManager().flush(CacheEvent.ALL);
+//        Registry.cacheManager().flush(CacheEvent.ALL);
 
       
         Patient.init();
@@ -154,7 +154,7 @@ public class DeleteCascadeTest extends ActiveJDBCTest{
         Patient.init();
         DoctorsPatients.init();
         
-        Registry.cacheManager().flush(CacheEvent.ALL);
+//        Registry.cacheManager().flush(CacheEvent.ALL);
 
 
         a(Doctor.count()).shouldBeEqual(3);
@@ -199,7 +199,7 @@ public class DeleteCascadeTest extends ActiveJDBCTest{
     @Test
     public void shouldDeleteMany2ManyShallow(){
         deleteAndPopulateTables("doctors", "patients", "doctors_patients", "prescriptions");
-        Registry.cacheManager().flush(CacheEvent.ALL);
+//        Registry.cacheManager().flush(CacheEvent.ALL);
 
         a(Prescription.count()).shouldBeEqual(5);
 
@@ -219,7 +219,7 @@ public class DeleteCascadeTest extends ActiveJDBCTest{
 
         deleteAndPopulateTables("vehicles", "mammals", "classifications");
 
-        Registry.cacheManager().flush(CacheEvent.ALL);
+//        Registry.cacheManager().flush(CacheEvent.ALL);
         Vehicle car = Vehicle.createIt("name", "car");
         Classification fourWheeled = Classification.create("name", "four wheeled");
         car.add(fourWheeled);

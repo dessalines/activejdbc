@@ -3,13 +3,13 @@
 	<groupId>com.github.tchoulihan</groupId>
 	<artifactId>activejdbc</artifactId>
 	<packaging>jar</packaging>
-	<version>1.4.19-SNAPSHOT</version>
+	<version>1.4.20</version>
 	<name>JavaLite - ActiveJDBC ORM Framework</name>
 
 	<parent>
 		<groupId>com.github.tchoulihan</groupId>
 		<artifactId>activejdbc-root</artifactId>
-		<version>1.4.19-SNAPSHOT</version>
+		<version>1.4.20</version>
 	</parent>
 
 
@@ -114,6 +114,24 @@
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
+		</profile>
+		<profile>
+			<id>doclint-java8-disable</id>
+			<activation>
+				<jdk>[1.8,)</jdk>
+			</activation>
+
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<configuration>
+							<additionalparam>-Xdoclint:none</additionalparam>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 	</profiles>
 
@@ -231,7 +249,7 @@
 		<dependency>
 			<groupId>com.github.tchoulihan</groupId>
 			<artifactId>javalite-common</artifactId>
-			<version>1.4.19-SNAPSHOT</version>
+			<version>1.4.20</version>
 			<exclusions>
 				<exclusion>
 					<groupId>dom4j</groupId>

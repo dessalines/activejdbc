@@ -3,7 +3,7 @@
   <groupId>com.github.tchoulihan</groupId>
   <artifactId>activejdbc-root</artifactId>
   <packaging>pom</packaging>
-  <version>1.4.19-SNAPSHOT</version>
+  <version>1.4.20</version>
   <name>JavaLite - ActiveJDBC Root</name>
   <url>https://github.com/tchoulihan/activejdbc</url>
   <parent>
@@ -26,7 +26,7 @@
     <connection>scm:git:https://github.com/tchoulihan/activejdbc</connection>
     <developerConnection>scm:git:https://github.com/tchoulihan/activejdbc</developerConnection>
     <url>scm:git:https://github.com/tchoulihan/activejdbc</url>
-    <tag>activejdbc-root-1.4.18</tag>
+    <tag>activejdbc-root-1.4.19</tag>
   </scm>
   <profiles>
     <profile>

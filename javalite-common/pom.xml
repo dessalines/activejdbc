@@ -1,14 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>javalite-common</artifactId>
-    <version>1.4.19-SNAPSHOT</version>
+    <version>1.4.20</version>
     <packaging>jar</packaging>
     <name>JavaLite - Common</name>
 
     <parent>
         <groupId>com.github.tchoulihan</groupId>
         <artifactId>activejdbc-root</artifactId>
-        <version>1.4.19-SNAPSHOT</version>
+        <version>1.4.20</version>
     </parent>
 
     <build>
@@ -39,6 +39,26 @@
         </plugins>
     </build>
 
+<profiles>
+		<profile>
+			<id>doclint-java8-disable</id>
+			<activation>
+				<jdk>[1.8,)</jdk>
+			</activation>
+
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<configuration>
+							<additionalparam>-Xdoclint:none</additionalparam>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>

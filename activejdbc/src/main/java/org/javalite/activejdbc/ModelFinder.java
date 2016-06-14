@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,6 +29,10 @@ public class ModelFinder {
 
     private static final List<String> modelClassNames = new ArrayList<String>();
 
+    private ModelFinder() {
+        
+    }
+    
     protected static void findModels(String dbName) throws IOException, ClassNotFoundException {
         //this is for static instrumentation. In case of dynamic, the  modelClassNames will already be filled.
         List<String> models = Registry.instance().getConfiguration().getModelNames(dbName);

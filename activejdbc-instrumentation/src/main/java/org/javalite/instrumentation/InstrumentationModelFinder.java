@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2014 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License"); 
 you may not use this file except in compliance with the License. 
@@ -43,6 +43,7 @@ public class InstrumentationModelFinder {
     private final CtClass modelClass;
     private final List<CtClass> models = new ArrayList<CtClass>();
     private final ClassPool cp;
+    private String currentDirectoryPath;
 
 
     protected InstrumentationModelFinder() throws NotFoundException, ClassNotFoundException {
@@ -92,8 +93,6 @@ public class InstrumentationModelFinder {
         }
     }
 
-    private String currentDirectoryPath;
-
     protected void processDirectoryPath(File directory) throws IOException, ClassNotFoundException {
         currentDirectoryPath = directory.getCanonicalPath();
         processDirectory(directory);
@@ -125,7 +124,7 @@ public class InstrumentationModelFinder {
      */
     private void findFiles(File directory) throws IOException, ClassNotFoundException {
 
-        File files[] = directory.listFiles(new FilenameFilter() {
+        File[] files = directory.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 return name.endsWith(".class");
             }

@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2014 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License"); 
 you may not use this file except in compliance with the License. 
@@ -117,6 +117,7 @@ public class Many2ManyRelationshipTest extends ActiveJDBCTest {
         List<Project> projects = programmer.get(Project.class, "duration_weeks = ?", 3);
         a(projects.size()).shouldBeEqual(1);
     }
+<<<<<<< HEAD
 
 
     @Test
@@ -141,4 +142,6 @@ public class Many2ManyRelationshipTest extends ActiveJDBCTest {
         doctors = p.getAll(Doctor.class);
         a(1).shouldBeEqual(doctors.size());
     }
+=======
+>>>>>>> upstream/master
 }

@@ -1,5 +1,5 @@
 tchoulihan's no-instrument ActiveJDBC - &mdash; ActiveRecord for Java
-==========
+
 
 This is a fork of the ActiveJDBC for java, that doesn't require any instrumentation, and is usable with a simple maven dependency.
 
@@ -30,3 +30,13 @@ User user = USER.findFirst("id = ?", userId);
 ```
 
 And use the constant `USER` for all activities, including .find, or .createit ...
+
+
+## Documentation
+
+For more information, follow here: http://javalite.io
+
+
+## Acknowledgement
+
+Special thanks to folks at [IntelliJ](http://www.jetbrains.com/) for granting a license to this project

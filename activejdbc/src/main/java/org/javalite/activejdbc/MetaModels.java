@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,22 +26,22 @@ import java.util.*;
  */
 class MetaModels {
 
-    private final static Logger logger = LoggerFactory.getLogger(MetaModels.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetaModels.class);
 
-    private final Map<String, MetaModel> metaModelsByTableName = new CaseInsensitiveMap<MetaModel>();
-    private final Map<Class<? extends Model>, MetaModel> metaModelsByClass = new HashMap<Class<? extends Model>, MetaModel>();
+    private final Map<String, MetaModel> metaModelsByTableName = new CaseInsensitiveMap<>();
+    private final Map<Class<? extends Model>, MetaModel> metaModelsByClass = new HashMap<>();
     //these are all many to many associations across all models.
     private final List<Many2ManyAssociation> many2ManyAssociations = new ArrayList<Many2ManyAssociation>();
 
     void addMetaModel(MetaModel mm, Class<? extends Model> modelClass) {
         Object o = metaModelsByClass.put(modelClass, mm);
         if (o != null) {
-            logger.warn("Double-register: {}: {}", modelClass, o);
+            LOGGER.warn("Double-register: {}: {}", modelClass, o);
         }
         o = metaModelsByTableName.put(mm.getTableName(), mm);
         many2ManyAssociations.addAll(mm.getManyToManyAssociations(Collections.<Association>emptyList()));
         if (o != null) {
-            logger.warn("Double-register: {}: {}", mm.getTableName(), o);
+            LOGGER.warn("Double-register: {}: {}", mm.getTableName(), o);
         }
     }
 
@@ -77,12 +77,19 @@ class MetaModels {
         metaModelsByTableName.get(table).setColumnMetadata(metaParams);
     }
 
+    /**
+     * An edge is a table in a many to many relationship that is not a join.
+     *
+     * @param join join table
+     *
+     * @return edges for a join.
+     */
     protected List<String> getEdges(String join) {
         List<String> results = new ArrayList<String>();
         for (Many2ManyAssociation a : many2ManyAssociations) {
-            if (a.getJoin().equalsIgnoreCase(join)){
-                results.add(a.getSource());
-                results.add(a.getTarget());
+            if (a.getJoin().equalsIgnoreCase(join)) {
+                results.add(getMetaModel(a.getSourceClass()).getTableName());
+                results.add(getMetaModel(a.getTargetClass()).getTableName());
             }
         }
         return results;

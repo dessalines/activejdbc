@@ -30,11 +30,13 @@ import org.slf4j.LoggerFactory;
 import static org.javalite.common.Util.*;
 
 /**
+ * This class exists to offload some logic from {@link Model}  class.
+ *
  * @author Igor Polevoy: 4/25/12 2:45 AM
  * @author Eric Nielsen
  */
 public final class ModelDelegate {
-    private final static Logger logger = LoggerFactory.getLogger(ModelDelegate.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ModelDelegate.class);
 
     private ModelDelegate() {
         // not instantiable
@@ -57,10 +59,9 @@ public final class ModelDelegate {
     }
 
     public static boolean belongsTo(Class<? extends Model> clazz, Class<? extends Model> targetClass) {
-        String targetTable = tableNameOf(targetClass);
         MetaModel metaModel = metaModelOf(clazz);
-        return (null != metaModel.getAssociationForTarget(targetTable, BelongsToAssociation.class) ||
-                null != metaModel.getAssociationForTarget(targetTable, Many2ManyAssociation.class));
+        return (null != metaModel.getAssociationForTarget(targetClass, BelongsToAssociation.class) ||
+                null != metaModel.getAssociationForTarget(targetClass, Many2ManyAssociation.class));
     }
 
     public static void blankToNull(Class<? extends Model> clazz, String... attributeNames) {
@@ -165,7 +166,7 @@ public final class ModelDelegate {
             ? new DB(metaModel.getDbName()).exec("DELETE FROM " + metaModel.getTableName() + " WHERE " + query)
             : new DB(metaModel.getDbName()).exec("DELETE FROM " + metaModel.getTableName() + " WHERE " + query, params);
         if (metaModel.cached()) {
-            QueryCache.instance().purgeTableCache(metaModel.getTableName());
+            Registry.cacheManager().purgeTableCache(metaModel);
         }
         purgeEdges(metaModel);
         return count;
@@ -175,7 +176,7 @@ public final class ModelDelegate {
         MetaModel metaModel = metaModelOf(clazz);
         int count = new DB(metaModel.getDbName()).exec("DELETE FROM " + metaModel.getTableName());
         if (metaModel.cached()) {
-            QueryCache.instance().purgeTableCache(metaModel.getTableName());
+            Registry.cacheManager().purgeTableCache(metaModel);
         }
         purgeEdges(metaModel);
         return count;
@@ -197,6 +198,22 @@ public final class ModelDelegate {
         return list.isEmpty() ? null : list.get(0);
     }
 
+    public static <T extends Model> T findByCompositeKeys(Class<T> clazz, Object...values) {
+        if (values == null || values.length == 0) { return null; }
+        MetaModel metaModel = metaModelOf(clazz);
+        String[] compositeKeys = metaModel.getCompositeKeys();
+        if (compositeKeys == null || compositeKeys.length != values.length){
+        	return null;
+        }
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < compositeKeys.length; i++) {
+			sb.append(i == 0 ? "" : " AND ").append(compositeKeys[i])
+					.append(" = ?");
+		}
+        LazyList<T> list = new LazyList<T>(sb.toString(), metaModel, values).limit(1);
+        return list.isEmpty() ? null : list.get(0);
+    }
+    
     public static <T extends Model> LazyList<T> findBySql(Class<T> clazz, String fullQuery, Object... params) {
         return new LazyList<T>(false, metaModelOf(clazz), fullQuery,  params);
     }
@@ -217,7 +234,7 @@ public final class ModelDelegate {
                 listener.onModel(instance(row, metaModel, clazz));
             }
         });
-        LogFilter.logQuery(logger, sql, null, start);
+        LogFilter.logQuery(LOGGER, sql, null, start);
     }
 
     static <T extends Model> T instance(Map<String, Object> map, MetaModel metaModel) {
@@ -227,8 +244,7 @@ public final class ModelDelegate {
     static <T extends Model> T instance(Map<String, Object> map, MetaModel metaModel, Class<T> clazz) {
         try {
             T instance = clazz.newInstance();
-            instance.setMetamodelLocal(metaModel);
-            instance.hydrate(map);
+            instance.hydrate(map, true);
             return instance;
         } catch(InstantiationException e) {
             throw new InitException("Failed to create a new instance of: " + metaModel.getModelClass() + ", are you sure this class has a default constructor?");
@@ -250,6 +266,22 @@ public final class ModelDelegate {
         return array;
     }
 
+    /**
+     * Returns {@link MetaModel} associated with table name.
+     *
+     * @param tableName name of table.
+     * @return {@link MetaModel} associated with table name
+     */
+    public static MetaModel metaModelFor(String tableName) {
+        return Registry.instance().getMetaModel(tableName);
+    }
+
+    /**
+     * Returns {@link MetaModel} associated with model class.
+     *
+     * @param clazz model class.
+     * @return {@link MetaModel} associated with table name
+     */
     public static MetaModel metaModelOf(Class<? extends Model> clazz) {
         return Registry.instance().getMetaModel(clazz);
     }
@@ -261,7 +293,7 @@ public final class ModelDelegate {
     public static void purgeCache(Class<? extends Model> clazz) {
         MetaModel metaModel = metaModelOf(clazz);
         if (metaModel.cached()) {
-            QueryCache.instance().purgeTableCache(metaModel.getTableName());
+            Registry.cacheManager().purgeTableCache(metaModel);
         }
     }
 
@@ -276,13 +308,13 @@ public final class ModelDelegate {
 
         List<Association> associations = metaModel.getAssociations();
         for(Association association: associations){
-            QueryCache.instance().purgeTableCache(association.getTarget());
+            Registry.cacheManager().purgeTableCache(metaModelOf(association.getTargetClass()));
         }
 
         //Purge edges in case this model represents a join
         List<String> edges = Registry.instance().getEdges(metaModel.getTableName());
         for(String edge: edges){
-            QueryCache.instance().purgeTableCache(edge);
+            Registry.cacheManager().purgeTableCache(edge);
         }
     }
 
@@ -303,14 +335,10 @@ public final class ModelDelegate {
     }
 
     public static int update(Class<? extends Model> clazz, String updates, String conditions, Object... params) {
-        //TODO: validate that the number of question marks is the same as number of parameters
         return update(metaModelOf(clazz), updates, conditions, params);
     }
 
     private static int update(MetaModel metaModel, String updates, String conditions, Object... params) {
-
-        //TODO: validate that the number of question marks is the same as number of parameters
-
         StringBuilder sql = new StringBuilder().append("UPDATE ").append(metaModel.getTableName()).append(" SET ");
         Object[] allParams;
         if (metaModel.hasAttribute("updated_at")) {
@@ -327,7 +355,7 @@ public final class ModelDelegate {
         }
         int count = new DB(metaModel.getDbName()).exec(sql.toString(), allParams);
         if (metaModel.cached()) {
-            QueryCache.instance().purgeTableCache(metaModel.getTableName());
+            Registry.cacheManager().purgeTableCache(metaModel);
         }
         return count;
     }

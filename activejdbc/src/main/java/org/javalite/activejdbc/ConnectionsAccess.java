@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2014 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License"); 
 you may not use this file except in compliance with the License. 
@@ -27,9 +27,13 @@ import java.util.*;
  * @author Igor Polevoy
  */
 public class ConnectionsAccess {
-    private final static Logger logger = LoggerFactory.getLogger(ConnectionsAccess.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionsAccess.class);
     private static final ThreadLocal<HashMap<String, Connection>> connectionsTL = new ThreadLocal<HashMap<String, Connection>>();
 
+    private ConnectionsAccess() {
+        
+    }
+    
     static Map<String, Connection> getConnectionMap(){
         if (connectionsTL.get() == null)
             connectionsTL.set(new HashMap<String, Connection>());
@@ -58,11 +62,11 @@ public class ConnectionsAccess {
             throw new InternalException("You are opening a connection " + dbName + " without closing a previous one. Check your logic. Connection still remains on thread: " + ConnectionsAccess.getConnectionMap().get(dbName));
         }
         ConnectionsAccess.getConnectionMap().put(dbName, connection);
-        LogFilter.log(logger, "Attached connection: {} named: {} to current thread. Extra info: {}", connection, dbName, extraInfo);
+        LogFilter.log(LOGGER, "Attached connection: {} named: {} to current thread. Extra info: {}", connection, dbName, extraInfo);
     }
 
     static void detach(String dbName){
-        LogFilter.log(logger, "Detached connection: {} from current thread", dbName);
+        LogFilter.log(LOGGER, "Detached connection: {} from current thread", dbName);
         getConnectionMap().remove(dbName);
     }
 

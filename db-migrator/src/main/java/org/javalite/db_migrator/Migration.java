@@ -1,23 +1,25 @@
 package org.javalite.db_migrator;
 
+import org.javalite.common.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
+import java.util.ArrayList;
+import java.util.List;
 
+import static org.javalite.common.Util.blank;
 import static org.javalite.db_migrator.DbUtils.exec;
 
 
-public class Migration implements Comparable<Migration> {
-    private static final Logger logger = LoggerFactory.getLogger(Migration.class);
+public class Migration implements Comparable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Migration.class);
     private static final String DEFAULT_DELIMITER = ";";
-    private static final String DEFAULT_DELIMITER_KEYWORD = "DELIMITER";
+    private static final String DELIMITER_KEYWORD = "DELIMITER";
+    private static final String[] COMMENT_CHARS = new String[]{"--", "#", "//"};
 
-    private final File migrationFile;
-    private final String version;
+    private File migrationFile;
+    private String version;
 
     public Migration(String version, File migrationFile) {
         this.migrationFile = migrationFile;
@@ -33,73 +35,52 @@ public class Migration implements Comparable<Migration> {
     }
 
     public void migrate(String encoding) throws Exception {
-
-
-        StringBuilder command = null;
+        String file = Util.readFile(migrationFile.getCanonicalPath(), encoding == null ? "UTF-8" : encoding);
+        String[] lines = file.split(System.getProperty("line.separator"));
+        String delimiter = DEFAULT_DELIMITER;
+        List<String> statements = new ArrayList<>();
         try {
-            String delimiter = DEFAULT_DELIMITER;
-            LineNumberReader lineReader = new LineNumberReader(new InputStreamReader(new FileInputStream(migrationFile), encoding == null? "UTF-8" : encoding));
-            String line;
-            while ((line = lineReader.readLine()) != null) {
-                if (command == null) {
-                    command = new StringBuilder();
-                }
-
-                line = line.trim(); // Strip extra whitespace too?
-
-                if (line.length() < 1) {
-                    // Do nothing, it's an empty line.
-                } else if (commentLine(line)) {
-                    logger.debug(line);
-                } else {
-                    if (startsWithIgnoreCase(line, DEFAULT_DELIMITER_KEYWORD)) {
+            String currentStatement = "";
+            for (String line : lines) {
+                if (!commentLine(line) && !blank(line)) {
+                    if (line.startsWith(DELIMITER_KEYWORD)) {
                         delimiter = line.substring(10).trim();
-                    } else if ((command.length() == 0) && startsWithIgnoreCase(line, "create ") && containsIgnoreCase(line, " as ")) {
-                        delimiter = line.substring(line.toLowerCase().lastIndexOf(" as ") + 4);
-                        command.append(line);
-                        command.append(" ");
                     } else if (line.contains(delimiter)) {
-                        if (line.startsWith(delimiter)) {
-                            delimiter = DEFAULT_DELIMITER;
+                        currentStatement += line.substring(0, line.indexOf(delimiter)) ;
+                        if(!blank(currentStatement)){
+                            statements.add(currentStatement);
                         }
-
-                        if (line.endsWith(delimiter)) {
-                            command.append(line.substring(0, line.lastIndexOf(delimiter)));
-                            exec(command.toString().trim());
-                            command = null;
-                        }
-                    } else {
-                        command.append(line);
-                        command.append(" ");
+                        currentStatement = line.substring(line.indexOf(delimiter) + delimiter.length());
+                    }else {
+                        currentStatement += line + System.getProperty("line.separator");
                     }
                 }
             }
 
-            // Check to see if we have an unexecuted statement in command.
-            if (command != null && command.length() > 0) {
-                //Last statement in script is missing a terminating delimiter, executing anyway.
-                exec(command.toString().trim());
+            if(!blank(currentStatement)){
+                statements.add(currentStatement);
             }
 
+            for (String statement : statements) {
+                exec(statement);
+            }
         } catch (Exception e) {
-            logger.error("Error executing: {}", command, e);
+            LOGGER.error("Error executing migration file: {}", migrationFile.getCanonicalPath(), e);
             throw e;
         }
     }
 
-    private boolean containsIgnoreCase(String line, String sub) {
-        return line.toLowerCase().contains(sub.toLowerCase());
-    }
-
-    private boolean startsWithIgnoreCase(String line, String sub) {
-        return line.toLowerCase().startsWith(sub.toLowerCase());
-    }
-
     private boolean commentLine(String line) {
-        return line.startsWith("--") || line.startsWith("#") || line.startsWith("//");
+        for (String cc : COMMENT_CHARS) {
+            if (line.trim().startsWith(cc)) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    public int compareTo(Migration other) {
+    public int compareTo(Object o) {
+        Migration other = (Migration) o;
         return this.getVersion().compareTo(other.getVersion());
     }
 }

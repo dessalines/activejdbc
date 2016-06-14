@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2014 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -46,12 +46,12 @@ public interface Dialect {
 
     String insertManyToManyAssociation(Many2ManyAssociation association);
 
-    String insertParametrized(MetaModel metaModel, List<String> columns);
+    String insertParametrized(MetaModel metaModel, List<String> columns, boolean containsId);
 
     String deleteManyToManyAssociation(Many2ManyAssociation association);
 
     String insert(MetaModel metaModel, Map<String, Object> attributes);
-    
+
     String update(MetaModel metaModel, Map<String, Object> attributes);
-    
+
 }

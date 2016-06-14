@@ -12,7 +12,7 @@ public class DbUtils {
 
     private static ThreadLocal<Connection> connectionTL = new ThreadLocal<Connection>();
 
-    private static Logger logger = LoggerFactory.getLogger(DbUtils.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(DbUtils.class);
 
     private static final String POSTGRESQL_FRAGMENT = ":postgresql:";
     private static final String MYSQL_FRAGMENT = ":mysql:";
@@ -24,6 +24,10 @@ public class DbUtils {
     private static final String DB2_FRAGMENT = ":db2:";
     private static final String ORACLE_FRAGMENT = ":oracle:";
 
+    private DbUtils() {
+        
+    }
+    
     /**
      * Given a jdbc url, this tries to determine the target database and returns the driver class name as a string.
      *
@@ -155,12 +159,13 @@ public class DbUtils {
         return connectionTL.get();
     }
 
-    public static int exec(String query){
+    public static int exec(String statement){
         Statement s = null;
         try {
             s = connection().createStatement();
-            int count = s.executeUpdate(query);
-            logger.info(query);
+            LOGGER.info("Executing: " + statement);
+            int count = s.executeUpdate(statement);
+
             return count;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -230,7 +235,4 @@ public class DbUtils {
             closeQuietly(st);
         }
     }
-
-
-
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2014 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License"); 
 you may not use this file except in compliance with the License. 
@@ -35,6 +35,7 @@ public abstract class Request<T extends Request> {
 
     protected final HttpURLConnection connection;
     private boolean connected;
+    protected boolean redirect;
     protected final String url;
 
     public Request(String url, int connectTimeout, int readTimeout) {
@@ -61,6 +62,17 @@ public abstract class Request<T extends Request> {
         return (T) this;
     }
 
+    /**
+     * Configures this request to follow redirects. Default is <code>false</code>.
+     *
+     * @see https://docs.oracle.com/javase/7/docs/api/java/net/HttpURLConnection.html#instanceFollowRedirects
+     * @param redirect true to follow, false to not.
+     * @return self
+     */
+    public T redirect(boolean redirect) {
+        this.redirect = redirect;
+        return (T) this;
+    }
 
     /**
      * Returns input stream to read server response from.
@@ -121,7 +133,7 @@ public abstract class Request<T extends Request> {
      *
      * @return response content from server as bytes.
      */
-    public byte[] bytes() {
+    public byte[]  bytes() {
 
         connect();
 
@@ -136,8 +148,10 @@ public abstract class Request<T extends Request> {
             }
         } catch (Exception e) {
             throw new HttpException("Failed URL: " + url, e);
+        }finally {
+            dispose();
         }
-        dispose();
+
         return bout.toByteArray();
     }
 
@@ -149,11 +163,11 @@ public abstract class Request<T extends Request> {
     public String text() {
         try {
             connect();
-            String result = responseCode() >= 400 ? read(connection.getErrorStream()) : read(connection.getInputStream());
-            dispose();
-            return result;
+            return responseCode() >= 400 ? read(connection.getErrorStream()) : read(connection.getInputStream());
         } catch (IOException e) {
             throw new HttpException("Failed URL: " + url, e);
+        }finally {
+            dispose();
         }
     }
 
@@ -167,11 +181,11 @@ public abstract class Request<T extends Request> {
     public String text(String encoding) {
         try {
             connect();
-            String result = responseCode() >= 400 ? read(connection.getErrorStream()) : read(connection.getInputStream(), encoding);
-            dispose();
-            return result;
+            return responseCode() >= 400 ? read(connection.getErrorStream()) : read(connection.getInputStream(), encoding);
         } catch (IOException e) {
             throw new HttpException("Failed URL: " + url, e);
+        }finally {
+            dispose();
         }
     }
 
@@ -191,18 +205,14 @@ public abstract class Request<T extends Request> {
         //according to this: http://download.oracle.com/javase/1.5.0/docs/guide/net/http-keepalive.html
         //should read all data from connection to make it happy.
         byte[] bytes = new byte[1024];
-        try {
-            InputStream in = connection.getInputStream();
+        try (InputStream in = connection.getInputStream()){
             if(in != null){
                 while ((in.read(bytes)) > 0) {}//do nothing
-                in.close();
             }
         } catch (Exception ignore) {
-            try {
-                InputStream errorStream = connection.getErrorStream();
+            try(InputStream errorStream = connection.getErrorStream()) {
                 if(errorStream != null){
                     while ((errorStream.read(bytes)) > 0) {}//do nothing
-                    errorStream.close();
                 }
             } catch (IOException ignoreToo) {}
         }

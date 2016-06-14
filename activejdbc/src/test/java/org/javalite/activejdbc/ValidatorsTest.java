@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2014 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License"); 
 you may not use this file except in compliance with the License. 
@@ -18,7 +18,6 @@ limitations under the License.
 package org.javalite.activejdbc;
 
 import java.text.DecimalFormatSymbols;
-import java.util.Locale;
 import org.javalite.activejdbc.test.ActiveJDBCTest;
 import org.javalite.activejdbc.validation.ValidationException;
 import org.javalite.test.jspec.ExceptionExpectation;
@@ -133,7 +132,7 @@ public class ValidatorsTest extends ActiveJDBCTest {
         User u = new User();
 
         //test good value
-        u.set("email", "igor@polevoy.org");
+        u.set("email", "john@doe.com");
         u.validate();
         a(u.errors().size()).shouldBeEqual(0);
 
@@ -144,6 +143,7 @@ public class ValidatorsTest extends ActiveJDBCTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testSaveItMethod(){
         deleteAndPopulateTables("users", "addresses");
         final User u = new User();
@@ -151,6 +151,7 @@ public class ValidatorsTest extends ActiveJDBCTest {
         //cause exception
         u.set("email", "this is not email value");
         expect(new ExceptionExpectation(ValidationException.class) {
+            @Override
             public void exec() {
                 u.saveIt();
             }
@@ -161,11 +162,11 @@ public class ValidatorsTest extends ActiveJDBCTest {
     public void testUniquenessValidator(){
         deleteAndPopulateTables("users", "addresses");
         // create a new user
-        new User().set("email", "igor@polevoy.org").saveIt();
+        new User().set("email", "john@doe.com").saveIt();
         
         // attempt creating another user with the same email
         User u = new User();
-        u.set("email", "igor@polevoy.org").saveIt();
+        u.set("email", "john@doe.com").saveIt();
         a(u).shouldNotBe("valid");
         a(u.errors().get("email")).shouldBeEqual("This email is already taken.");
     }

@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import static org.javalite.activejdbc.test.JdbcProperties.driver;
 import static org.javalite.common.Collections.*;
 
 import static org.javalite.activejdbc.test_models.Person.Person;
@@ -161,6 +162,7 @@ public class ModelTest extends ActiveJDBCTest {
         deleteAndPopulateTable("people");
         final Person p = new Person();
         expect(new ExceptionExpectation(IllegalArgumentException.class) {
+            @Override
             public void exec() {
                 p.set("NAME1", "Igor");
             }
@@ -173,6 +175,7 @@ public class ModelTest extends ActiveJDBCTest {
         final Person p = new Person();
 
         expect(new ExceptionExpectation(IllegalArgumentException.class) {
+            @Override
             public void exec() {
                 p.set("person_id", "hehe");
             }
@@ -255,6 +258,7 @@ public class ModelTest extends ActiveJDBCTest {
     public void testBatchUpdateAll() {
         deleteAndPopulateTable("people");
         expect(new DifferenceExpectation(Person.find("last_name like ?", "Smith").size()) {
+            @Override
             public Object exec() {
                 Person.updateAll("last_name = ?", "Smith");
                 return Person.find("last_name like ?", "Smith").size();
@@ -293,12 +297,14 @@ public class ModelTest extends ActiveJDBCTest {
         deleteAndPopulateTables("users", "addresses");
         final User user = User.findById(1);
         expect(new ExceptionExpectation(NotAssociatedException.class){
+            @Override
             public void exec() {
                 user.getAll(Book.class);//wrong table
             }
         });
 
         expect(new ExceptionExpectation(NotAssociatedException.class){
+            @Override
             public void exec() {
                 user.getAll(Book.class);//non-existent table
             }
@@ -429,12 +435,14 @@ public class ModelTest extends ActiveJDBCTest {
         a.delete();
 
         expect(new ExceptionExpectation(FrozenException.class) {
+            @Override
             public void exec() {
                 a.saveIt();
             }
         });
 
         expect(new ExceptionExpectation(FrozenException.class) {
+            @Override
             public void exec() {
                 u.add(a);
             }
@@ -539,7 +547,12 @@ public class ModelTest extends ActiveJDBCTest {
         the(Base.exec(updateSql)).shouldBeEqual(1);
 
         alarm = Alarm.findById(alarm.getId());
-        the(alarm.getTime("alarm_time").toString()).shouldBeEqual(t);
+
+        if(driver().contains("jtds")){
+            the(alarm.getString("alarm_time").startsWith(t)).shouldBeTrue();
+        }else {
+            the(alarm.getTime("alarm_time").toString()).shouldBeEqual(t);
+        }
     }
 
     @Test(expected = NoSuchElementException.class)
@@ -578,7 +591,12 @@ public class ModelTest extends ActiveJDBCTest {
         Object id = Base.execInsert(insertSql, alarm.getIdName());
 
         alarm = Alarm.findById(id);
-        the(alarm.getTime("alarm_time").toString()).shouldBeEqual(t);
+
+        if(driver().contains("jtds")){
+            the(alarm.getString("alarm_time").startsWith(t)).shouldBeTrue();
+        }else {
+            the(alarm.getTime("alarm_time").toString()).shouldBeEqual(t);
+        }
     }
 
     @Test
@@ -601,6 +619,7 @@ public class ModelTest extends ActiveJDBCTest {
     public void shouldCreateModelWithSingleSetter(){
         deleteAndPopulateTable("people");
         expect(new DifferenceExpectation(Person.count()) {
+            @Override
             public Object exec() {
                 new Person().set("name", "Marilyn", "last_name", "Monroe", "dob", "1935-12-06").saveIt();
                 return (Person.count());
@@ -718,7 +737,7 @@ public class ModelTest extends ActiveJDBCTest {
     }
 
     @Test
-    public void testNewFromMapCaseInsensive() {
+    public void testNewFromMapCaseInsensitive() {
         Person p = new Person().fromMap(map("NAME", "Joe", "Last_Name", "Schmoe", "dob", "2003-06-15"));
 
         a(p.get("name")).shouldNotBeNull();
@@ -734,6 +753,11 @@ public class ModelTest extends ActiveJDBCTest {
         alarm.save();
 
         alarm = Alarm.findById(alarm.getId());
-        the(alarm.getTime("alarm_time").toString()).shouldBeEqual(t);
+
+        if(driver().contains("jtds")){
+            the(alarm.getString("alarm_time").startsWith(t)).shouldBeTrue();
+        }else {
+            the(alarm.getTime("alarm_time").toString()).shouldBeEqual(t);
+        }
     }
 }

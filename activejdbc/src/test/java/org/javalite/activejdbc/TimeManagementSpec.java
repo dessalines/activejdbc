@@ -15,6 +15,7 @@ import static org.javalite.activejdbc.test_models.Person.Person;
  */
 public class TimeManagementSpec extends ActiveJDBCTest {
 
+    @Override
     @Before
     public void before() throws Exception {
         super.before();

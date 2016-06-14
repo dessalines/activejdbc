@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2014 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License"); 
 you may not use this file except in compliance with the License. 
@@ -88,6 +88,10 @@ public class Inflector {
         addIrregular("move", "moves");
 
         uncountables = Arrays.asList("equipment", "information", "rice", "money", "species", "series", "fish", "sheep");
+    }
+    
+    private Inflector() {
+        
     }
 
     public static void addPlural(String rule, String replacement){

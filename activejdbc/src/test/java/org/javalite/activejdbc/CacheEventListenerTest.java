@@ -17,6 +17,7 @@ import static org.javalite.activejdbc.test_models.Person.Person;
  */
 public class CacheEventListenerTest extends ActiveJDBCTest {
 
+    @Override
     @After
     public void after(){
         super.after();

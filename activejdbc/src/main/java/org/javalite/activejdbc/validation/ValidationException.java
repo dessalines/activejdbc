@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2014 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License"); 
 you may not use this file except in compliance with the License. 
@@ -27,8 +27,8 @@ import java.util.Locale;
  * @author Igor Polevoy
  */
 public class ValidationException extends DBException {
-    private String message = "";
-    private Model source;
+    private final String message;
+    private final Model source;
 
     public ValidationException(Model m){
         message = m.errors().toString();
@@ -38,6 +38,7 @@ public class ValidationException extends DBException {
     public ValidationException(String message) {
         super(message);
         this.message = message;
+        this.source = null;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,18 +23,20 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.Map.Entry;
 
 import static org.javalite.activejdbc.LogFilter.*;
 import static org.javalite.common.Inflector.*;
-import static org.javalite.common.Util.*;
 
 
 public class MetaModel implements Serializable {
-    private final static Logger logger = LoggerFactory.getLogger(MetaModel.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetaModel.class);
+    private static final ThreadLocal<HashMap<Class, String>> shardingTableNamesTL = new ThreadLocal<>();
 
     private Map<String, ColumnMetadata> columnMetadata;
     private final List<Association> associations = new ArrayList<Association>();
     private final String idName;
+    private final String[] compositeKeys;
     private final String tableName, dbType, dbName;
     private final Class<? extends Model> modelClass;
     private final boolean cached;
@@ -45,12 +47,53 @@ public class MetaModel implements Serializable {
     protected MetaModel(String dbName, Class<? extends Model> modelClass, String dbType) {
         this.modelClass = modelClass;
         this.idName = findIdName(modelClass);
+        this.compositeKeys = findCompositeKeys(modelClass);
         this.tableName = findTableName(modelClass);
         this.dbType = dbType;
         this.cached = isCached(modelClass);
         this.dbName = dbName;
         this.idGeneratorCode = findIdGeneratorCode(modelClass);
         this.versionColumn = findVersionColumn(modelClass);
+    }
+
+    static Map<Class,String> getTableNamesMap(){
+        if (shardingTableNamesTL.get() == null)
+            shardingTableNamesTL.set(new HashMap<Class, String>());
+        return shardingTableNamesTL.get();
+    }
+
+    /**
+     *
+     *
+     * <p>
+     *      <strong>This feature is for sharding!</strong>
+     *      <br>
+     *      Do not use it to set table names <em>willy-nilly</em>!
+     * </p>
+     *
+     * <p>
+     *      Sets a table name for this model. The table name is attached to a current thread and will remain there
+     *      until it is set with a different value or cleared with {@link #clearShardTableName()} method.
+     *      Table name set with this method overrides a table name naturally mapped to this model.
+     *</p>
+     * <p>
+     *      Method {@link #getTableName()} will return this value for all operations related to this table.
+     * </p>
+     *
+     * @param tableName name of a table this model will read from current thread.
+     */
+    public void setShardTableName(String tableName){
+        getTableNamesMap().put(modelClass, tableName);
+    }
+
+    /**
+     * Clears sharding name of table attached to current thread.
+     * The name was supposedly attached by the {@link #setShardTableName(String)}
+     * method. After execution of this class, the method {@link #getTableName()} will be
+     * returning the value this {@link MetaModel} was initialized with during teh bootstrap phase.
+     */
+    public void clearShardTableName(){
+        getTableNamesMap().remove(modelClass);
     }
 
     private boolean isCached(Class<? extends Model> modelClass) {
@@ -62,6 +105,11 @@ public class MetaModel implements Serializable {
         return idNameAnnotation == null ? "id" : idNameAnnotation.value();
     }
 
+    private String[] findCompositeKeys(Class<? extends Model> modelClass) {
+    	CompositePK compositeKeysAnnotation = modelClass.getAnnotation(CompositePK.class);
+        return compositeKeysAnnotation == null ? null : compositeKeysAnnotation.value();
+    }
+    
     private String findTableName(Class<? extends Model> modelClass) {
         Table tableAnnotation = modelClass.getAnnotation(Table.class);
         return tableAnnotation == null ? tableize(modelClass.getSimpleName()) : tableAnnotation.value();
@@ -100,8 +148,18 @@ public class MetaModel implements Serializable {
         return modelClass;
     }
 
+    /**
+     * Returns table name currently associated with this model.
+     * Table name can be modified for sharding using {@link #setShardTableName(String)}
+     *
+     * @return table name currently associated with this model.
+     */
     public String getTableName() {
-        return tableName;
+        if(getTableNamesMap().containsKey(modelClass)){
+            return getTableNamesMap().get(modelClass);
+        }else{
+            return tableName;
+        }
     }
 
     void setColumnMetadata(Map<String, ColumnMetadata> columnMetadata){
@@ -195,18 +253,27 @@ public class MetaModel implements Serializable {
         return idName;
     }
 
+	/**
+	 * Returns optional composite primary key class
+	 * 
+	 * @return composite primary key class
+	 */
+	public String[] getCompositeKeys() {
+		return compositeKeys;
+	}
+    
     /**
      * Returns association of this table with the target table. Will return null if there is no association.
      *
-     * @param target association of this table and the target table.
+     * @param targetModelClass association of this model and the target model.
      * @param associationClass class of association in requested.
      * @return association of this table with the target table. Will return null if there is no association with target
      * table and specified type.
      */
-    public <A extends Association> A getAssociationForTarget(String target, Class<A> associationClass){
+    public <A extends Association> A getAssociationForTarget(Class<? extends Model> targetModelClass, Class<A> associationClass){
         Association result = null;
         for (Association association : associations) {
-            if (association.getClass().equals(associationClass) && association.getTarget().equalsIgnoreCase(target)) {
+            if (association.getClass().equals(associationClass) && association.getTargetClass().equals(targetModelClass)) {
                 result = association; break;
             }
         }
@@ -217,14 +284,14 @@ public class MetaModel implements Serializable {
     /**
      * Returns association of this table with the target table. Will return null if there is no association.
      *
-     * @param target association of this table and the target table.
+     * @param targetClass association of this model and the target model.
      * @return association of this table with the target table. Will return null if there is no association with target
      * table and specified type.
      */
-    public <A extends Association> A getAssociationForTarget(String target){
+    public <A extends Association> A getAssociationForTarget(Class<? extends Model> targetClass){
         Association result = null;
         for (Association association : associations) {
-            if (association.getTarget().equalsIgnoreCase(target)) {
+            if (association.getTargetClass().equals(targetClass)) {
                 result = association; break;
             }
         }
@@ -237,15 +304,15 @@ public class MetaModel implements Serializable {
      * to have more than one association to a target table if a target table is the same as source. Usually this
      * happens when tree structures are stored in the same table (category has many categories).
      *
-     * @param target association of this table and the target table.
+     * @param targetModelClass association of this model and the target model.
      * @return list of associations of this table with the target table. Will return empty list if none found.
      * table and specified type.
      */
-    public List<Association> getAssociationsForTarget(String target) {
+    public List<Association> getAssociationsForTarget(Class<? extends Model> targetModelClass) {
         List<Association> result = new ArrayList<Association>();
 
         for (Association association : associations) {
-            if (association.getTarget().equalsIgnoreCase(target)) {
+            if (association.getTargetClass().equals(targetModelClass)) {
                 result.add(association);
             }
         }
@@ -254,7 +321,7 @@ public class MetaModel implements Serializable {
 
     protected void addAssociation(Association association) {
         if (!associations.contains(association)) {
-            log(logger, "Association found: {}", association);
+            log(LOGGER, "Association found: {}", association);
             associations.add(association);
         }
     }
@@ -266,12 +333,19 @@ public class MetaModel implements Serializable {
      * @return true if this attribute is present in this meta model, false of not.
      */
     boolean hasAttribute(String attribute) {
-        return columnMetadata != null && columnMetadata.containsKey(attribute);
+        if(columnMetadata != null){
+            if(columnMetadata.containsKey(attribute)){
+                return true;
+            }else if(attribute.startsWith("\"") && attribute.endsWith("\"")){
+                return columnMetadata.containsKey(attribute.substring(1, attribute.length() - 1));
+            }
+        }
+        return false;
     }
 
-    protected boolean hasAssociation(String table, Class<? extends Association> associationClass){
+    protected boolean hasAssociation(Class<? extends Model> targetClass, Class<? extends Association> associationClass){
         for (Association association : associations) {
-            if(association.getTarget().equalsIgnoreCase(table) &&
+            if(association.getTargetClass().equals(targetClass) &&
                     association.getClass().equals(associationClass)) return true;
         }
         return false;
@@ -282,8 +356,8 @@ public class MetaModel implements Serializable {
         final StringBuilder t = new StringBuilder();
         t.append("MetaModel: ").append(tableName).append(", ").append(modelClass).append("\n");
         if(columnMetadata != null){
-            for (String key : columnMetadata.keySet()) {
-                t.append(columnMetadata.get(key)).append(", ");
+            for (Entry<String, ColumnMetadata> metadata : columnMetadata.entrySet()) {
+                t.append(metadata.getValue()).append(", ");
             }
         }
 
@@ -344,31 +418,17 @@ public class MetaModel implements Serializable {
     }
 
     /**
-     * Checks if this model has a named attribute or association whose target has the same name as argument.
-     * Throws <code>IllegalArgumentException</code> in case it does not find either one.
+     * Checks if this model has a named attribute that has the same name as argument.
      *
-     * @param attributeOrAssociation name  of attribute or association target.
+     * Throws <code>IllegalArgumentException</code> in case it does not find it.
+     *
+     * @param attribute name  of attribute or association target.
      */
-    protected void checkAttributeOrAssociation(String attributeOrAssociation) {
-        if (!hasAttribute(attributeOrAssociation)) {
-            boolean contains = false;
-            for (Association association : associations) {
-                if (association.getTarget().equalsIgnoreCase(attributeOrAssociation)) {
-                    contains = true;
-                    break;
-                }
-            }
-            if (!contains) {
-                StringBuilder sb = new StringBuilder().append("Attribute: '").append(attributeOrAssociation)
-                        .append("' is not defined in model: '").append(getModelClass())
-                        .append("' and also, did not find an association by the same name, available attributes: ")
-                        .append(getAttributeNames());
-                if (!associations.isEmpty()) {
-                    sb.append("\nAvailable associations:\n");
-                    join(sb, associations, "\n");
-                }
-                throw new IllegalArgumentException(sb.toString());
-            }
+    protected void checkAttribute(String attribute) {
+        if (!hasAttribute(attribute)) {
+            String sb = "Attribute: '" + attribute + "' is not defined in model: '" + getModelClass() + ". "
+                    + "Available attributes: " +getAttributeNames();
+            throw new IllegalArgumentException(sb);
         }
     }
 
@@ -396,9 +456,13 @@ public class MetaModel implements Serializable {
      * @return true if any association exists such that the current model is a source and targetModelClass is a target.
      */
     public boolean isAssociatedTo(Class<? extends Model> targetModelClass) {
+
+        if(targetModelClass == null){
+            throw  new NullPointerException();
+        }
+
         for (Association association : associations) {
-            Class targetClass = Registry.instance().getModelClass(association.getTarget(), true);
-            if (targetClass != null && targetClass.equals(targetModelClass)) {
+            if (association.getTargetClass().equals(targetModelClass)) {
                 return true;
             }
         }

@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2014 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License"); 
 you may not use this file except in compliance with the License. 
@@ -24,6 +24,7 @@ import org.javalite.activejdbc.test.ActiveJDBCTest;
 import org.junit.Test;
 
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +42,11 @@ public class BatchExecTest extends ActiveJDBCTest {
 
             Base.addBatch(ps, "Mic", "Jagger", getDate(1962, 1, 1));
             Base.addBatch(ps, "Marilyn", "Monroe", getDate(1932, 1, 1));
-            Base.executeBatch(ps);
+            int[] counts = Base.executeBatch(ps);
+
+            the(counts.length).shouldBeEqual(2);
+            the(counts[0] == 1 || counts[0] == Statement.SUCCESS_NO_INFO).shouldBeTrue(); //Oracle!!
+            the(counts[1] == 1 || counts[1] == Statement.SUCCESS_NO_INFO).shouldBeTrue();
 
             List<Map> people = Base.findAll("select * from people order by name");
 

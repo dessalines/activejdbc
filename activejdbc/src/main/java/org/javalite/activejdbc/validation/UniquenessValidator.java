@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,18 +19,21 @@ package org.javalite.activejdbc.validation;
 import org.javalite.activejdbc.DB;
 import org.javalite.activejdbc.MetaModel;
 import org.javalite.activejdbc.Model;
-import org.javalite.activejdbc.Registry;
+
+import static org.javalite.activejdbc.ModelDelegate.metaModelOf;
 
 
 public class UniquenessValidator extends ValidatorAdapter {
     private final String attribute;
+
     public UniquenessValidator(String attribute) {
         this.attribute = attribute;
         setMessage("should be unique");
     }
+
     @Override
     public void validate(Model model) {
-        MetaModel metaModel = Registry.instance().getMetaModel(model.getClass());
+        MetaModel metaModel = metaModelOf(model.getClass());
         if (new DB(metaModel.getDbName()).count(metaModel.getTableName(),
                 attribute + " = ? AND " + metaModel.getIdName() + " != ?",
                 model.get(attribute), model.get(metaModel.getIdName())) > 0) {

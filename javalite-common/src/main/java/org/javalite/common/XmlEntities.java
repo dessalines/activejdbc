@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2014 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -114,7 +114,7 @@ public class XmlEntities {
          */
         // TODO not thread-safe as there is a window between changing the two maps
         public void add(String name, int value) {
-            mapNameToValue.put(name, new Integer(value));
+            mapNameToValue.put(name, Integer.valueOf(value));
             mapValueToName.put(value, name);
         }
 
@@ -137,7 +137,7 @@ public class XmlEntities {
         }
     }
 
-    static abstract class MapIntMap implements XmlEntities.EntityMap {
+    abstract static class MapIntMap implements XmlEntities.EntityMap {
         protected final Map mapNameToValue;
 
         protected final Map mapValueToName;
@@ -157,15 +157,15 @@ public class XmlEntities {
          * {@inheritDoc}
          */
         public void add(String name, int value) {
-            mapNameToValue.put(name, new Integer(value));
-            mapValueToName.put(new Integer(value), name);
+            mapNameToValue.put(name, Integer.valueOf(value));
+            mapValueToName.put(Integer.valueOf(value), name);
         }
 
         /**
          * {@inheritDoc}
          */
         public String name(int value) {
-            return (String) mapValueToName.get(new Integer(value));
+            return (String) mapValueToName.get(Integer.valueOf(value));
         }
 
         /**
@@ -245,7 +245,7 @@ public class XmlEntities {
         // TODO this class is not thread-safe
         protected final int growBy;
 
-        protected int size = 0;
+        protected int size;
 
         protected String[] names;
 

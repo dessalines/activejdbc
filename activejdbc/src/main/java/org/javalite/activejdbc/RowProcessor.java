@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public class RowProcessor {
 
         ResultSetMetaData metaData = rs.getMetaData();
 
-        String labels[] = new String[metaData.getColumnCount()];
+        String[] labels = new String[metaData.getColumnCount()];
         int i = 0;
         while (i < labels.length) {
             labels[i++] = metaData.getColumnLabel(i);

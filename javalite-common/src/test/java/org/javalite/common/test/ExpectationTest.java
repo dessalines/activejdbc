@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.javalite.common.Collections.*;
+import static org.javalite.test.jspec.JSpec.$;
 import static org.javalite.test.jspec.JSpec.a;
 import static org.javalite.test.jspec.JSpec.the;
 
@@ -53,7 +54,7 @@ public class ExpectationTest {
         the("meaning of life is 42").shouldContain("meaning");
 
         //list
-        a(list("one", "two", "three")).shouldContain("one");
+        $(list("one", "two", "three")).shouldContain("one");
 
         //map
         a(map("one", 1, "two", 2)).shouldContain("one");

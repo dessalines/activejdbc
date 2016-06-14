@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2015 Igor Polevoy
+Copyright 2009-2016 Igor Polevoy
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,10 +23,10 @@ import org.javalite.common.Inflector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 
+import static org.javalite.activejdbc.ModelDelegate.metaModelOf;
 import static org.javalite.common.Util.*;
 
 
@@ -37,9 +37,9 @@ import static org.javalite.common.Util.*;
  * @author Igor Polevoy
  * @author Eric Nielsen
  */
-public class LazyList<T extends Model> extends AbstractLazyList<T> {
+public class LazyList<T extends Model> extends AbstractLazyList<T> implements Externalizable {
 
-    private static final Logger logger = LoggerFactory.getLogger(LazyList.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LazyList.class);
     private final List<String> orderBys = new ArrayList<String>();
     private final MetaModel metaModel;
     private final String subQuery;
@@ -171,7 +171,7 @@ public class LazyList<T extends Model> extends AbstractLazyList<T> {
 
         //lets cache included classes and associations for future processing.
         for (Class includeClass : classes) {
-            includes.addAll(metaModel.getAssociationsForTarget(Registry.instance().getTableName(includeClass)));
+            includes.addAll(metaModel.getAssociationsForTarget(includeClass));
         }
 
         return (LazyList<E>)this;
@@ -299,7 +299,7 @@ public class LazyList<T extends Model> extends AbstractLazyList<T> {
             sql = metaModel.getDialect().formSelect(null, fullQuery, orderBys, limit, offset);
         }else{
             sql = fullQuery != null ? fullQuery
-                : metaModel.getDialect().formSelect(metaModel.getTableName(), subQuery, orderBys, limit, offset);
+                    : metaModel.getDialect().formSelect(metaModel.getTableName(), subQuery, orderBys, limit, offset);
         }
         if (showParameters) {
             StringBuilder sb = new StringBuilder(sql).append(", with parameters: ");
@@ -331,7 +331,7 @@ public class LazyList<T extends Model> extends AbstractLazyList<T> {
                 delegate.add(ModelDelegate.<T>instance(map, metaModel));
             }
         });
-        LogFilter.logQuery(logger, sql, params, start);
+        LogFilter.logQuery(LOGGER, sql, params, start);
         if(metaModel.cached()){
             delegate = Collections.unmodifiableList(delegate);
             QueryCache.instance().addItem(metaModel.getTableName(), sql, params, delegate);
@@ -372,7 +372,7 @@ public class LazyList<T extends Model> extends AbstractLazyList<T> {
         if (distinctParentIds.isEmpty()) {
             return;
         }
-        final MetaModel parentMetaModel = Registry.instance().getMetaModel(association.getTarget());
+        final MetaModel parentMetaModel = metaModelOf(association.getTargetClass());
         final Map<Object, Model> parentById = new HashMap<Object, Model>();
 
         StringBuilder query = new StringBuilder().append(parentMetaModel.getIdName()).append(" IN (");
@@ -400,7 +400,7 @@ public class LazyList<T extends Model> extends AbstractLazyList<T> {
         if (distinctParentIds.isEmpty()) {
             return;
         }
-        final MetaModel parentMetaModel = Registry.instance().getMetaModel(association.getTarget());
+        final MetaModel parentMetaModel = metaModelOf(association.getTargetClass());
         final Map<Object, Model> parentById = new HashMap<Object, Model>();
 
         StringBuilder query = new StringBuilder().append(parentMetaModel.getIdName()).append(" IN (");
@@ -482,7 +482,7 @@ public class LazyList<T extends Model> extends AbstractLazyList<T> {
         if (delegate.isEmpty()) {//no need to process children if no models selected.
             return;
         }
-        MetaModel childMetaModel = Registry.instance().getMetaModel(association.getTarget());
+        MetaModel childMetaModel = metaModelOf(association.getTargetClass());
         Map<Object, List<Model>> childrenByParentId = new HashMap<Object, List<Model>>();
         List<Object> ids = collect(metaModel.getIdName());
         StringBuilder query = new StringBuilder().append("parent_id IN (");
@@ -508,7 +508,7 @@ public class LazyList<T extends Model> extends AbstractLazyList<T> {
         if(delegate.isEmpty()){//no need to process children if no models selected.
             return;
         }
-        final MetaModel childMetaModel = Registry.instance().getMetaModel(association.getTarget());
+        final MetaModel childMetaModel = metaModelOf(association.getTargetClass());
         final String fkName = association.getFkName();
         final Map<Object, List<Model>> childrenByParentId = new HashMap<Object, List<Model>>();
         List<Object> ids = collect(metaModel.getIdName());
@@ -516,9 +516,9 @@ public class LazyList<T extends Model> extends AbstractLazyList<T> {
         appendQuestions(query, ids.size());
         query.append(')');
         for (Model child : new LazyList<Model>(query.toString(), childMetaModel, ids.toArray()).orderBy(childMetaModel.getIdName())) {
-             if(childrenByParentId.get(child.get(fkName)) == null){
-                    childrenByParentId.put(child.get(fkName), new SuperLazyList<Model>());
-             }
+            if(childrenByParentId.get(child.get(fkName)) == null){
+                childrenByParentId.put(child.get(fkName), new SuperLazyList<Model>());
+            }
             childrenByParentId.get(child.get(fkName)).add(child);
         }
         for(T parent : delegate){
@@ -533,7 +533,7 @@ public class LazyList<T extends Model> extends AbstractLazyList<T> {
         if(delegate.isEmpty()){//no need to process other if no models selected.
             return;
         }
-        final MetaModel childMetaModel = Registry.instance().getMetaModel(association.getTarget());
+        final MetaModel childMetaModel = metaModelOf(association.getTargetClass());
         final Map<Object, List<Model>> childrenByParentId = new HashMap<Object, List<Model>>();
         List<Object> ids = collect(metaModel.getIdName());
         List<Map> childResults = new DB(childMetaModel.getDbName()).findAll(childMetaModel.getDialect().selectManyToManyAssociation(
@@ -542,8 +542,8 @@ public class LazyList<T extends Model> extends AbstractLazyList<T> {
             Model child = ModelDelegate.instance(res, childMetaModel);
             Object parentId = res.get("the_parent_record_id");
             if(childrenByParentId.get(parentId) == null){
-                    childrenByParentId.put(parentId, new SuperLazyList<Model>());
-             }
+                childrenByParentId.put(parentId, new SuperLazyList<Model>());
+            }
             childrenByParentId.get(parentId).add(child);
         }
         for(T parent : delegate){
@@ -573,5 +573,16 @@ public class LazyList<T extends Model> extends AbstractLazyList<T> {
             p.write('\n');
         }
         p.flush();
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(delegate);
+
+    }
+
+    @Override @SuppressWarnings("unchecked")
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        delegate = (List<T>) in.readObject();
     }
 }

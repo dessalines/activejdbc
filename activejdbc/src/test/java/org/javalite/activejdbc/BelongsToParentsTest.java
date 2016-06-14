@@ -15,13 +15,8 @@ import static org.javalite.activejdbc.test_models.Motherboard.Motherboard;
 
 public class BelongsToParentsTest extends ActiveJDBCTest {
 
-<<<<<<< HEAD
-	@Before
-	public void before() throws Exception { 
-=======
 	@Override
-    public void before() throws Exception { 
->>>>>>> upstream/master
+    public void before() throws Exception {
 		super.before();
 
         deleteFromTable("computers");

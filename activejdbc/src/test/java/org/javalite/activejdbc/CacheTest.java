@@ -27,17 +27,12 @@ import org.javalite.activejdbc.test_models.*;
 import org.junit.Test;
 
 import java.util.List;
-<<<<<<< HEAD
 import static org.javalite.activejdbc.test_models.Doctor.Doctor;
 import static org.javalite.activejdbc.test_models.Person.Person;
 import static org.javalite.activejdbc.test_models.Book.Book;
 import static org.javalite.activejdbc.test_models.Library.Library;
 import static org.javalite.activejdbc.test_models.Account.Account;
-=======
 
-import static org.javalite.test.jspec.JSpec.$;
-
->>>>>>> upstream/master
 
 /**
  * @author Igor Polevoy

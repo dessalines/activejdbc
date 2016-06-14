@@ -44,60 +44,7 @@ public class Configuration {
     private Map<String, ConnectionSpec> connectionSpecMap = new HashMap<>();
 
     protected Configuration(){
-<<<<<<< HEAD
-//        try {
-//            Enumeration<URL> resources = getClass().getClassLoader().getResources("activejdbc_models.properties");
-//            while (resources.hasMoreElements()) {
-//                URL url = resources.nextElement();
-//                LogFilter.log(logger, "Load models from: {}", url.toExternalForm());
-//                InputStream inputStream = null;
-//                InputStreamReader isreader = null;
-//                BufferedReader reader = null;
-//                try {
-//                    inputStream = url.openStream();
-//                    isreader = new InputStreamReader(inputStream);
-//                    reader = new BufferedReader(isreader);
-//                    String line;
-//                    while ((line = reader.readLine()) != null) {
-//
-//                        String[] parts = split(line, ':');
-//                        String modelName = parts[0];
-//                        String dbName = parts[1];
-//
-//                        List<String> modelNames = modelsMap.get(dbName);
-//                        if (modelNames == null) {
-//                            modelNames = new ArrayList<String>();
-//                            modelsMap.put(dbName, modelNames);
-//                        }
-//                        modelNames.add(modelName);
-//                    }
-//                } finally {
-//                    closeQuietly(reader);
-//                    closeQuietly(isreader);
-//                    closeQuietly(inputStream);
-//                }
-//            }
-//        } catch (IOException e) {
-//            throw new InitException(e);
-//        }
-//        if(modelsMap.isEmpty()){
-//            LogFilter.log(logger, "ActiveJDBC Warning: Cannot locate any models, assuming project without models.");
-//            return;
-//        }
-//        try {
-//            Enumeration<URL> resources = ClassLoader.getSystemClassLoader().getResources("activejdbc.properties");
-//            while (resources.hasMoreElements()) {
-//                properties.load(resources.nextElement().openStream());
-//            }
-//        } catch (IOException e){
-//            throw new InitException(e);
-//        }
 
-//        String cacheManagerClass = properties.getProperty("cache.manager");
-    	
-//        String cacheManagerClass = "org.javalite.activejdbc.cache.OSCacheManager";
-    	String cacheManagerClass = null;
-=======
         try {
             Enumeration<URL> resources = getClass().getClassLoader().getResources("activejdbc_models.properties");
             while (resources.hasMoreElements()) {
@@ -145,18 +92,16 @@ public class Configuration {
         }
 
         String cacheManagerClass = properties.getProperty("cache.manager");
->>>>>>> upstream/master
+
         if(cacheManagerClass != null){
             try{
                 Class cmc = Class.forName(cacheManagerClass);
                 cacheManager = (CacheManager)cmc.newInstance();
-<<<<<<< HEAD
-            } catch(Exception e){
-=======
+
             }catch(InitException e){
                 throw e;
             }catch(Exception e){
->>>>>>> upstream/master
+
                 throw new InitException("failed to initialize a CacheManager. Please, ensure that the property " +
                         "'cache.manager' points to correct class which extends '" + CacheManager.class.getName() + "' and provides a default constructor.", e);
             }

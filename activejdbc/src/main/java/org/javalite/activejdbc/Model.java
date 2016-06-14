@@ -58,11 +58,8 @@ import static org.javalite.common.Util.*;
  */
 public abstract class Model extends CallbackSupport implements Externalizable {
 
-<<<<<<< HEAD
-    private final Logger logger = LoggerFactory.getLogger(Model.class);
-=======
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Model.class);
->>>>>>> upstream/master
 
     private Map<String, Object> attributes = new CaseInsensitiveMap<Object>();
     private final Set<String> dirtyAttributeNames = new CaseInsensitiveSet();
@@ -76,9 +73,7 @@ public abstract class Model extends CallbackSupport implements Externalizable {
     private Errors errors = new Errors();
 
     protected Model() {
-<<<<<<< HEAD
     	init();
-=======
         metaModelLocal = metaModelOf(getClass());
     }
 
@@ -87,7 +82,6 @@ public abstract class Model extends CallbackSupport implements Externalizable {
         for (CallbackListener callback : modelRegistryLocal().callbacks()) {
             callback.afterLoad(this);
         }
->>>>>>> upstream/master
     }
 
     private void fireBeforeSave() {
@@ -159,10 +153,6 @@ public abstract class Model extends CallbackSupport implements Externalizable {
         }
     }
 
-<<<<<<< HEAD
-    public MetaModel getMetaModel() {
-        return ModelDelegate.metaModelOf(this.getClass());
-=======
     /**
      * <p>
      * Provides {@link MetaModel} object related to this model class.
@@ -182,7 +172,7 @@ public abstract class Model extends CallbackSupport implements Externalizable {
      */
     public static MetaModel metaModel() {
         return metaModelOf(modelClass());
->>>>>>> upstream/master
+
     }
 
     protected Map<String, Object> getAttributes() {
@@ -1871,10 +1861,6 @@ public abstract class Model extends CallbackSupport implements Externalizable {
         errors.put(key, value);
     }
 
-<<<<<<< HEAD
-    public void removeValidator(Validator validator){
-        ModelDelegate.removeValidator(this.getClass(), validator);
-=======
     /**
      * Removes a validator from model.
      *
@@ -1884,7 +1870,6 @@ public abstract class Model extends CallbackSupport implements Externalizable {
      */
     public static void removeValidator(Validator validator){
         ModelDelegate.removeValidator(modelClass(), validator);
->>>>>>> upstream/master
     }
 
     //TODO: missing no-arg getValidators()?
@@ -2771,18 +2756,8 @@ public abstract class Model extends CallbackSupport implements Externalizable {
         throw new InitException("failed to determine Model class name, are you sure models have been instrumented?");
     }
 
-<<<<<<< HEAD
     public String getTableName() {
         return ModelDelegate.tableNameOf(this.getClass());
-=======
-    /**
-     * Returns name of corresponding table.
-     *
-     * @return name of corresponding table.
-     */
-    public static String getTableName() {
-        return ModelDelegate.tableNameOf(modelClass());
->>>>>>> upstream/master
     }
 
     /**

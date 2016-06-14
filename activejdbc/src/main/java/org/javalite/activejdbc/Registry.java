@@ -333,13 +333,7 @@ public enum Registry {
      */
     private void registerModels(String dbName, List<Class<? extends Model>> modelClasses, String dbType) {
         for (Class<? extends Model> modelClass : modelClasses) {
-<<<<<<< HEAD
         	registerModel(dbName, modelClass, dbType);
-=======
-            MetaModel mm = new MetaModel(dbName, modelClass, dbType);
-            metaModels.addMetaModel(mm, modelClass);
-            LogFilter.log(LOGGER, "Registered model: {}", modelClass);
->>>>>>> upstream/master
         }
     }
     

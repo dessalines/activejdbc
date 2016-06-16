@@ -161,8 +161,8 @@ public abstract class Model extends CallbackSupport implements Externalizable {
      *
      * @return {@link MetaModel} object related to this model class.
      */
-    public static MetaModel getMetaModel() {
-        return metaModelOf(modelClass());
+    public MetaModel getMetaModel() {
+        return ModelDelegate.metaModelOf(this.getClass());
     }
 
     /**
@@ -170,8 +170,8 @@ public abstract class Model extends CallbackSupport implements Externalizable {
      *
      * @return {@link MetaModel} of this model.
      */
-    public static MetaModel metaModel() {
-        return metaModelOf(modelClass());
+    public MetaModel metaModel() {
+        return ModelDelegate.metaModelOf(this.getClass());
 
     }
 
@@ -1868,7 +1868,7 @@ public abstract class Model extends CallbackSupport implements Externalizable {
      *                  remove. If argument was not added to this model before, this method will
      *                  do nothing.
      */
-    public static void removeValidator(Validator validator){
+    public void removeValidator(Validator validator){
         ModelDelegate.removeValidator(modelClass(), validator);
     }
 
@@ -2234,9 +2234,9 @@ public abstract class Model extends CallbackSupport implements Externalizable {
 	 * @return instance of a found model, or null if nothing found.
 	 * @see CompositePK
 	 */
-	public static <T extends Model> T findByCompositeKeys(Object... values) {
-		return ModelDelegate.findByCompositeKeys(Model.<T>modelClass(), values);
-	}
+//	public <T extends Model> T findByCompositeKeys(Object... values) {
+//		return ModelDelegate.findByCompositeKeys((T) this.getClass(), values);
+//	}
 
     /**
      * Finder method for DB queries based on table represented by this model. Usually the SQL starts with:

@@ -340,7 +340,7 @@ public enum Registry {
     private void registerModel(String dbName, Class<? extends Model> modelClass, String dbType) {
         MetaModel mm = new MetaModel(dbName, modelClass, dbType);
         metaModels.addMetaModel(mm, modelClass);
-        LogFilter.log(logger, "Registered model: {}", modelClass);
+        LogFilter.log(LOGGER, "Registered model: {}", modelClass);
     }
 
     private void processOverrides(Set<Class<? extends Model>> models) {

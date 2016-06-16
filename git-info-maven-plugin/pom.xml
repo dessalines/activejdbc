@@ -2,7 +2,11 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>git-info-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
+<<<<<<< HEAD
     <version>1.4.11</version>
+=======
+    <version>1.4.12-SNAPSHOT</version>
+>>>>>>> upstream/master
     <name>JavaLite - Git Info Maven plugin</name>
     <description>will generate a file with relevant information related to
         project at the time of build</description>
@@ -10,8 +14,25 @@
     <parent>
         <groupId>org.javalite</groupId>
         <artifactId>activejdbc-root</artifactId>
+<<<<<<< HEAD
         <version>1.4.11</version>
+=======
+        <version>1.4.12-SNAPSHOT</version>
+>>>>>>> upstream/master
     </parent>
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencies>
             <dependency><groupId>junit</groupId><artifactId>junit</artifactId><version>4.8.1</version><scope>test</scope></dependency>
@@ -20,7 +41,11 @@
         <dependency>
             <groupId>org.javalite</groupId>
             <artifactId>javalite-common</artifactId>
+<<<<<<< HEAD
             <version>1.4.11</version>
+=======
+            <version>1.4.12-SNAPSHOT</version>
+>>>>>>> upstream/master
         </dependency>
         </dependencies>
 

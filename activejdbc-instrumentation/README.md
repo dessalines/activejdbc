@@ -16,8 +16,8 @@ classes thus blow away instrumentation. When a developer tries to run a unit tes
 needs to be executed again. It also requires Maven/Ant/script configuration.
 
 Dynamic instrumentation is implemented as a Java Agent (javaagent). The same Maven plugin is also used as a Java Agent.
-Currently only available as a snapshot:
-[ActiveJDBC Instrumentation plugin](https://oss.sonatype.org/content/repositories/snapshots/org/javalite/activejdbc-instrumentation/1.4.10-SNAPSHOT/)
+Available from Maven Central:
+[ActiveJDBC Instrumentation plugin](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22activejdbc-instrumentation%22)
 
 
 ### Dynamic instrumentation logging
@@ -28,7 +28,7 @@ If you want to see some output from instrumentation process, simply add this sys
 
 ### How to use dynamic instrumentation
 
-* Download latest build of: [activejdbc-instrumentation.jar](https://oss.sonatype.org/content/repositories/snapshots/org/javalite/activejdbc-instrumentation/1.4.10-SNAPSHOT/) and place it somewhere on your file system.
+* Download latest build of: [Activejdbc Instrumentation Jar file](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22activejdbc-instrumentation%22) and place it somewhere on your file system.
 (You might already have this file in your local Maven repository, might want to look there)
 * When executing any program that requires ActiveJDBC, pass this parameter to JVM:
 
@@ -42,7 +42,7 @@ It is easy to configure defaults in every IDE to add this parameter to JVM when 
 
 ### Dynamic instrumentation and compatilility with Java 8
 
-There are some conflicts using models' static methods inside lambda expressions. So far this is the only issue. Statis instrumentation is free of conflicts and works perfectly with Java 8. 
+There are some conflicts using models' static methods inside lambda expressions. So far this is the only issue. Static instrumentation is free of conflicts and works perfectly with Java 8. 
 
 ### How to deploy ActiveJDBC applications
 

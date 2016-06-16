@@ -29,10 +29,10 @@ public class OracleDialect extends DefaultDialect {
      *
      * <blockquote><pre>
      * SELECT * FROM (
-     *   SELECT a.*, ROWNUM AS ORACLE_OFFSET FROM (
-     *     SELECT * FROM pages WHERE &lt;conditions&gt; ORDER BY id
-     *   ) a
-     * ) WHERE ORACLE_OFFSET &gt;= 20 AND ROWNUM &lt;= 10;
+     *   SELECT t2.*, ROWNUM AS oracle_row_number FROM (
+     *     SELECT t.* FROM pages t WHERE &lt;conditions&gt; ORDER BY id
+     *   ) t2
+     * ) WHERE oracle_row_number &gt;= 20 AND rownum &lt;= 10;
      * </pre></blockquote>
      *
      * <p>Look here for reference: <a href="http://explainextended.com/2009/05/06/oracle-row_number-vs-rownum/">Oracle: ROW_NUMBER vs ROWNUM</a>
@@ -45,30 +45,32 @@ public class OracleDialect extends DefaultDialect {
      * @param offset offset value, -1 if not needed.
      * @return Oracle - specific select query. Here is one example:
      *
-     * <pre>SELECT * FROM (SELECT a.*, ROWNUM AS ORACLE_OFFSET FROM (SELECT * FROM pages WHERE &lt;conditions&gt; ORDER BY id) a) WHERE ORACLE_OFFSET &gt;= 20 AND ROWNUM &lt;= 10;</pre>
+     * <pre>SELECT * FROM (SELECT t2.*, ROWNUM AS oracle_row_number FROM (SELECT t.* FROM pages t WHERE &lt;conditions&gt; ORDER BY id) t2) WHERE oracle_row_number &gt;= 20 AND rownum &lt;= 10;</pre>
      * Can't think of an uglier thing. Shame on you, Oracle.
      */
     @Override
     public String formSelect(String tableName, String subQuery, List<String> orderBys, long limit, long offset) {
+
         boolean needLimit = limit != -1L;
         boolean needOffset = offset != -1L;
 
         StringBuilder fullQuery = new StringBuilder();
         if (needOffset) {
-            fullQuery.append("SELECT * FROM (SELECT a.*, ROWNUM AS ORACLE_OFFSET FROM (");
+            fullQuery.append("SELECT * FROM (SELECT t2.*, ROWNUM AS oracle_row_number FROM (");
         } else if (needLimit) { // if needLimit and don't needOffset
-            fullQuery.append("SELECT * FROM (");
+            fullQuery.append("SELECT * FROM (SELECT t2.* FROM (");
         }
-        appendSelect(fullQuery, tableName, subQuery, orderBys);
+        //TODO check if this can be simplified removing the alias t
+        appendSelect(fullQuery, tableName, (needLimit || needOffset) ? "t" : null, subQuery, orderBys);
 
         if (needOffset) {
             // Oracle offset starts with 1, not like MySQL with 0;
-            fullQuery.append(") a) WHERE ORACLE_OFFSET >= ").append(offset + 1);
+            fullQuery.append(") t2) WHERE oracle_row_number >= ").append(offset + 1);
             if (needLimit) {
                 fullQuery.append(" AND ROWNUM <= ").append(limit);
             }
         } else if (needLimit) {
-            fullQuery.append(") WHERE ROWNUM <= ").append(limit);
+            fullQuery.append(") t2) WHERE ROWNUM <= ").append(limit);            
         }
 
         return fullQuery.toString();
@@ -76,7 +78,9 @@ public class OracleDialect extends DefaultDialect {
 
     @Override
     protected void appendEmptyRow(MetaModel metaModel, StringBuilder query) {
-        query.append('(').append(metaModel.getIdName()).append(") VALUES (null)");
+        query.append('(').append(metaModel.getIdName()).append(") VALUES (")
+                .append(metaModel.getIdGeneratorCode() != null ? metaModel.getIdGeneratorCode() : "NULL")
+                .append(')');
     }
 
     @Override

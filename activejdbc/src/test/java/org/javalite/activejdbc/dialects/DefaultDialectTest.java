@@ -18,6 +18,7 @@ package org.javalite.activejdbc.dialects;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.javalite.activejdbc.test.ActiveJDBCTest;
+import org.javalite.activejdbc.test_models.Patient;
 import org.javalite.activejdbc.test_models.Person;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -56,9 +57,9 @@ public class DefaultDialectTest extends ActiveJDBCTest {
 
     @Test
     public void testCreateParametrizedInsert() {
-        a(dialect.insertParametrized(Person.getMetaModel(), Arrays.asList("name"))).shouldBeEqual(
+        a(dialect.insertParametrized(Person.getMetaModel(), Arrays.asList("name"), false)).shouldBeEqual(
                 "INSERT INTO people (name) VALUES (?)");
-        a(dialect.insertParametrized(Person.getMetaModel(), Arrays.asList("name", "last_name"))).shouldBeEqual(
+        a(dialect.insertParametrized(Person.getMetaModel(), Arrays.asList("name", "last_name"), false)).shouldBeEqual(
                 "INSERT INTO people (name, last_name) VALUES (?, ?)");
     }
 

@@ -117,6 +117,7 @@ public class Many2ManyRelationshipTest extends ActiveJDBCTest {
         List<Project> projects = programmer.get(Project.class, "duration_weeks = ?", 3);
         a(projects.size()).shouldBeEqual(1);
     }
+<<<<<<< HEAD
 
 
     @Test
@@ -141,4 +142,6 @@ public class Many2ManyRelationshipTest extends ActiveJDBCTest {
         doctors = p.getAll(Doctor.class);
         a(1).shouldBeEqual(doctors.size());
     }
+=======
+>>>>>>> upstream/master
 }

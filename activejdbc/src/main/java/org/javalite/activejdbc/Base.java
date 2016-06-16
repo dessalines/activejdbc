@@ -35,6 +35,23 @@ import java.util.Properties;
  * @author Eric Nielsen
  */
 public class Base {
+
+    private Base() {
+        
+    }
+    
+    /**
+     * This method will open a connection defined in the file 'database.properties' located at
+     * root of classpath. The connection picked from the file is defined by <code>ACTIVE_ENV</code>
+     * environment variable. If this variable is not defined, it defaults to 'development' environment.
+     *
+     * If there is JUnit on classpath, this method assumes it is running under test, and defaults to 'test'.
+     *
+     */
+    public static void open(){
+        new DB(DB.DEFAULT_NAME).open();
+    }
+
     /**
      * Opens a new connection based on JDBC properties and attaches it to a current thread.
      *
@@ -323,9 +340,14 @@ public class Base {
      * Executes a batch on <code>java.sql.PreparedStatement</code>.
      *
      * @param ps <code>java.sql.PreparedStatement</code> to execute batch on.
+     *
+     * @return an array of update counts containing one element for each command in the batch.
+     * The elements of the array are ordered according to the order in which commands were added to the batch.
+     *
+     * @see <a href="http://docs.oracle.com/javase/7/docs/api/java/sql/Statement.html#executeBatch()">Statement#executeBatch()</a>
      */
-    public static void executeBatch(PreparedStatement ps) {
-        new DB(DB.DEFAULT_NAME).executeBatch(ps);
+    public static int[] executeBatch(PreparedStatement ps) {
+        return new DB(DB.DEFAULT_NAME).executeBatch(ps);
     }
 
 

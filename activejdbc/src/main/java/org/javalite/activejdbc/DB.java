@@ -23,10 +23,14 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Pattern;
 
-import static org.javalite.common.Util.*;
+import static org.javalite.common.Util.closeQuietly;
+import static org.javalite.common.Util.empty;
 
 /**
  * This class provides a number of convenience methods for opening/closing database connections, running various
@@ -38,7 +42,7 @@ import static org.javalite.common.Util.*;
  */
 public class DB {
 
-    private final static Logger logger = LoggerFactory.getLogger(DB.class);
+    private static final Logger logger = LoggerFactory.getLogger(DB.class);
     static final Pattern SELECT_PATTERN = Pattern.compile("^\\s*SELECT",
             Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
     static final Pattern INSERT_PATTERN = Pattern.compile("^\\s*INSERT",
@@ -110,6 +114,27 @@ public class DB {
         } catch (Exception e) {
             throw new InitException("Failed to connect to JNDI name: " + jndiName, e);
         }
+    }
+
+
+    /**
+     * This method will open a connection defined in the file 'database.properties' located at
+     * root of classpath. The connection picked from the file is defined by <code>ACTIVE_ENV</code>
+     * environment variable. If this variable is not defined, it defaults to 'development' environment.
+     *
+     * If there is JUnit on classpath, this method assumes it is running under test, and defaults to 'test'.
+     *
+     */
+    public void open(){
+
+        Configuration config = Registry.instance().getConfiguration();
+        ConnectionSpec spec = config.getCurrentConnectionSpec();
+        String conf = config.getEnvironment();
+        if(spec == null){
+            throw new DBException("Could not find configuration in a property file for environment: " + config.getEnvironment() +
+                    ". Are you sure you have a database.properties file configured?");
+        }
+        open(spec);
     }
 
     /**
@@ -362,7 +387,7 @@ public class DB {
      */
     public List<Map> findAll(String query, Object ... params) {
 
-        final List<Map> results = new ArrayList<Map>();
+        final List<Map> results = new ArrayList<>();
         long start = System.currentTimeMillis();
         find(query, params).with(new RowListenerAdapter() {
             @Override public void onNext(Map<String, Object> row) {
@@ -460,8 +485,6 @@ public class DB {
 
         if(query.indexOf('?') == -1 && params.length != 0) throw new IllegalArgumentException("you passed arguments, but the query does not have placeholders: (?)");
 
-        if(!SELECT_PATTERN.matcher(query).find()) { throw new IllegalArgumentException("query must be 'select' query"); }
-
         //TODO: cache prepared statements here too
         PreparedStatement ps;
         ResultSet rs;
@@ -553,7 +576,6 @@ public class DB {
      * @return number of records affected.
      */
     public int exec(String query, Object... params){
-        if(SELECT_PATTERN.matcher(query).find()) { throw new IllegalArgumentException("expected DML, but got select..."); }
 
         if(query.indexOf('?') == -1) throw new IllegalArgumentException("query must be parametrized");
 
@@ -597,27 +619,25 @@ public class DB {
                 ps = connection.prepareStatement(query, new String[]{autoIncrementColumnName});
                 StatementCache.instance().cache(connection, query, ps);
             }
-            for (int index = 0; index < params.length; index++) {
-                Object param = params[index];
+            for (int index = 0; index < params.length;) {
+                Object param = params[index++];
                 if (param instanceof byte[]) {
                     byte[] bytes = (byte[]) param;
                     try {
                         Blob blob = connection.createBlob();
                         if (blob == null) { // SQLite
-                            ps.setBytes(index + 1, bytes);
+                            ps.setBytes(index, bytes);
                         } else {
                             blob.setBytes(1, bytes);
-                            ps.setBlob(index + 1, blob);
+                            ps.setBlob(index, blob);
                         }
                     } catch (AbstractMethodError e) {// net.sourceforge.jtds.jdbc.ConnectionJDBC2.createBlob is abstract :)
-                        ps.setObject(index + 1, param);
-                    } catch (SQLFeatureNotSupportedException e) {
-                        ps.setObject(index + 1, param);
+                        ps.setObject(index, param);
                     } catch (SQLException e) {
-                        ps.setObject(index + 1, param);
+                        ps.setObject(index, param);
                     }
-                }else{
-                    ps.setObject(index + 1, param);
+                } else {
+                    ps.setObject(index, param);
                 }
             }
 
@@ -797,11 +817,17 @@ public class DB {
      * Executes a batch on <code>java.sql.PreparedStatement</code>.
      *
      * @param ps <code>java.sql.PreparedStatement</code> to execute batch on.
+     *
+     * @return an array of update counts containing one element for each command in the batch.
+     * The elements of the array are ordered according to the order in which commands were added to the batch.
+     *
+     * @see <a href="http://docs.oracle.com/javase/7/docs/api/java/sql/Statement.html#executeBatch()">Statement#executeBatch()</a>
      */
-    public void executeBatch(PreparedStatement ps){
+    public int[] executeBatch(PreparedStatement ps){
         try {
-            ps.executeBatch();
+            int[] counters = ps.executeBatch();
             ps.clearParameters();
+            return counters;
         } catch (SQLException e) {
             throw new DBException(e);
         }

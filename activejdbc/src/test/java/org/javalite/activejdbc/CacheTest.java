@@ -27,11 +27,17 @@ import org.javalite.activejdbc.test_models.*;
 import org.junit.Test;
 
 import java.util.List;
+<<<<<<< HEAD
 import static org.javalite.activejdbc.test_models.Doctor.Doctor;
 import static org.javalite.activejdbc.test_models.Person.Person;
 import static org.javalite.activejdbc.test_models.Book.Book;
 import static org.javalite.activejdbc.test_models.Library.Library;
 import static org.javalite.activejdbc.test_models.Account.Account;
+=======
+
+import static org.javalite.test.jspec.JSpec.$;
+
+>>>>>>> upstream/master
 
 /**
  * @author Igor Polevoy
@@ -159,22 +165,28 @@ public class CacheTest extends ActiveJDBCTest {
     int count = 0;
 //    @Test
     public void shouldNotPropagateCacheEventForNonCachedModels(){
-
         CacheEventListener cl = new CacheEventListener() {
             public void onFlush(CacheEvent event) {
                 count++;
             }
         };
-
-        QueryCache.instance().getCacheManager().addCacheEventListener(cl);
+        Registry.cacheManager().addCacheEventListener(cl);
         Person.deleteAll();
         a(count).shouldBeEqual(1);
-
-
         Account.deleteAll();
-
         a(count).shouldBeEqual(1);
-
     }
 
+    int count1 = 0;
+    @Test
+    public void shouldNotPropagateCacheEventOnFlush(){
+        CacheEventListener cl = new CacheEventListener() {
+            public void onFlush(CacheEvent event) {
+                count1++;
+            }
+        };
+        Registry.cacheManager().addCacheEventListener(cl);
+        Registry.cacheManager().flush(new CacheEvent("people", "blah"), false);
+        $(count1).shouldBeEqual(0);
+    }
 }

@@ -29,4 +29,16 @@ import static com....Tables.*;
 User user = USER.findFirst("id = ?", userId);
 ```
 
+<<<<<<< HEAD
 And use the constant `USER` for all activities, including .find, or .createit ...
+=======
+## Documentation
+
+For more information, follow here: http://javalite.io
+
+
+## Acknowledgement
+
+Special thanks to folks at [IntelliJ](http://www.jetbrains.com/) for granting a license to this project
+
+>>>>>>> upstream/master

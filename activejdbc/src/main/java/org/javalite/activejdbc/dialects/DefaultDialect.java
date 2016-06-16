@@ -15,6 +15,7 @@ limitations under the License.
 */
 package org.javalite.activejdbc.dialects;
 
+import static org.javalite.activejdbc.ModelDelegate.metaModelOf;
 import static org.javalite.common.Util.blank;
 import static org.javalite.common.Util.join;
 import static org.javalite.common.Util.joinAndRepeat;
@@ -28,6 +29,7 @@ import java.util.regex.Pattern;
 
 import org.javalite.activejdbc.CaseInsensitiveMap;
 import org.javalite.activejdbc.MetaModel;
+import org.javalite.activejdbc.Registry;
 import org.javalite.activejdbc.associations.Many2ManyAssociation;
 import org.javalite.common.Convert;
 
@@ -99,11 +101,17 @@ public class DefaultDialect implements Dialect {
         }
     }
 
-    protected void appendSelect(StringBuilder query, String tableName, String subQuery, List<String> orderBys) {
+    protected void appendSelect(StringBuilder query, String tableName, String tableAlias, String subQuery,
+            List<String> orderBys) {
         if (tableName == null) {
             query.append(subQuery);
         } else {
-            query.append("SELECT * FROM ").append(tableName);
+            if (tableAlias == null) {
+                query.append("SELECT * FROM ").append(tableName);
+            } else {
+                query.append("SELECT ").append(tableAlias).append(".* FROM ").append(tableName).append(' ')
+                        .append(tableAlias);
+            }
             appendSubQuery(query, subQuery);
         }
         appendOrderBy(query, orderBys);
@@ -112,7 +120,7 @@ public class DefaultDialect implements Dialect {
     @Override
     public String formSelect(String tableName, String subQuery, List<String> orderBys, long limit, long offset) {
         StringBuilder fullQuery = new StringBuilder();
-        appendSelect(fullQuery, tableName, subQuery, orderBys);
+        appendSelect(fullQuery, tableName, null, subQuery, orderBys);
         return fullQuery.toString();
     }
 
@@ -139,10 +147,11 @@ public class DefaultDialect implements Dialect {
 
     @Override
     public String selectManyToManyAssociation(Many2ManyAssociation association, String sourceFkColumnName, int questionsCount) {
-        StringBuilder query = new StringBuilder().append("SELECT ").append(association.getTarget()).append(".*, t.")
+        String targetTable = metaModelOf(association.getTargetClass()).getTableName();
+        StringBuilder query = new StringBuilder().append("SELECT ").append(targetTable).append(".*, t.")
                 .append(association.getSourceFkName()).append(" AS ").append(sourceFkColumnName).append(" FROM ")
-                .append(association.getTarget()).append(" INNER JOIN ").append(association.getJoin()).append(" t ON ")
-                .append(association.getTarget()).append('.').append(association.getTargetPk()).append(" = t.")
+                .append(targetTable).append(" INNER JOIN ").append(association.getJoin()).append(" t ON ")
+                .append(targetTable).append('.').append(association.getTargetPk()).append(" = t.")
                 .append(association.getTargetFkName()).append(" WHERE t.").append(association.getSourceFkName())
                 .append(" IN (");
         appendQuestions(query, questionsCount);
@@ -157,14 +166,21 @@ public class DefaultDialect implements Dialect {
     }
 
     @Override
-    public String insertParametrized(MetaModel metaModel, List<String> columns) {
+    public String insertParametrized(MetaModel metaModel, List<String> columns, boolean containsId) {
         StringBuilder query = new StringBuilder().append("INSERT INTO ").append(metaModel.getTableName()).append(' ');
         if (columns.isEmpty()) {
             appendEmptyRow(metaModel, query);
         } else {
+            boolean addIdGeneratorCode = (!containsId && metaModel.getIdGeneratorCode() != null);
             query.append('(');
+            if (addIdGeneratorCode) {
+                query.append(metaModel.getIdName()).append(", ");
+            }
             join(query, columns, ", ");
             query.append(") VALUES (");
+            if (addIdGeneratorCode) {
+                query.append(metaModel.getIdGeneratorCode()).append(", ");
+            }
             appendQuestions(query, columns.size());
             query.append(')');
         }
@@ -211,9 +227,17 @@ public class DefaultDialect implements Dialect {
         if (attributes.isEmpty()) {
             appendEmptyRow(metaModel, query);
         } else {
+            boolean addIdGeneratorCode = (metaModel.getIdGeneratorCode() != null
+                    && attributes.get(metaModel.getIdName()) == null); // do not use containsKey
             query.append('(');
+            if (addIdGeneratorCode) {
+                query.append(metaModel.getIdName()).append(", ");
+            }
             join(query, attributes.keySet(), ", ");
             query.append(") VALUES (");
+            if (addIdGeneratorCode) {
+                query.append(metaModel.getIdGeneratorCode()).append(", ");
+            }
             Iterator<Object> it = attributes.values().iterator();
             appendValue(query, it.next());
             while (it.hasNext()) {
@@ -248,7 +272,16 @@ public class DefaultDialect implements Dialect {
                 break;
             }
         }
-        query.append(" WHERE ").append(idName).append(" = ").append(attributes.get(idName));
+
+        if (metaModel.getCompositeKeys() == null){
+        	query.append(" WHERE ").append(idName).append(" = ").append(attributes.get(idName));
+        } else {
+        	String[] compositeKeys = metaModel.getCompositeKeys();
+			for (int i = 0; i < compositeKeys.length; i++) {
+				query.append(i == 0 ? " WHERE " : " AND ").append(compositeKeys[i]).append(" = ");
+				appendValue(query, attributes.get(compositeKeys[i]));
+			}
+        }
     	return query.toString();
     }
 }
